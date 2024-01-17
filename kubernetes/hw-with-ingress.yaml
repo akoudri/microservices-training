@@ -62,16 +62,10 @@ spec:
         version: "1.0"
     spec:
       containers:
-      - name: helloworld2
+      - name: helloworld
         image: karthequian/helloworld:black
         ports:
         - containerPort: 80
-        env:
-        - name: SERVER_URL
-          valueFrom:
-            secretKeyRef:
-              name: mdp
-              key: password
 ---
 apiVersion: v1
 kind: Service

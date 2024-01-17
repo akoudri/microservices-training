@@ -9,6 +9,8 @@ metadata:
   name: example-config
   namespace: training
 data:
+  title: Hello
+  message: How are you ?
   app.properties: |
     title=Hello
     message=How are you ?

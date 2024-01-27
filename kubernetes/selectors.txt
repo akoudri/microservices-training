@@ -1,0 +1,8 @@
+k get pods -n training --show-labels
+k get pods --selector env=production -n training
+k get pods --selector dev-lead=karthik -n training
+k get pods --selector dev-lead=karthik,env=staging -n training
+k get pods --selector dev-lead!=karthik,env=staging -n training
+k get pods -l 'release-version in (1.0,2.0)' -n training
+k get pods -l 'release-version in (1.0,2.0),team in (marketing,ecommerce)' -n training
+k get pods -l 'release-version notin (1.0,2.0)' -n training

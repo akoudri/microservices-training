@@ -1,0 +1,122 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      volumes:
+        - name: esdata
+          hostPath:
+            path: /data/esdata
+      initContainers:
+        - name: busybox
+          image: busybox:1.28
+          command:
+            ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+          volumeMounts:
+            - name: esdata
+              mountPath: "/usr/share/elasticsearch/data"
+      containers:
+        - name: elasticsearch
+          image: elasticsearch:7.17.4
+          ports:
+            - name: es1
+              containerPort: 9200
+            - name: es2
+              containerPort: 9300
+          env:
+            - name: discovery.type
+              value: "single-node"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx1g"
+          volumeMounts:
+            - mountPath: "/usr/share/elasticsearch/data"
+              name: esdata
+          resources:
+            requests:
+              memory: "1Gi"
+            limits:
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?wait_for_status=yellow
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  ports:
+    - protocol: TCP
+      name: es1
+      port: 9200
+      targetPort: 9200
+    - protocol: TCP
+      name: es2
+      port: 9300
+      targetPort: 9300
+  selector:
+    app: elasticsearch
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: analytics
+  labels:
+    app: analytics
+
+spec:
+  replicas:
+  selector:
+    matchLabels:
+      app: analytics
+  template:
+    metadata:
+      labels:
+        app: analytics
+    spec:
+      containers:
+        - name: analytics
+          image: kibana:7.17.4
+          ports:
+            - name: analytics
+              containerPort: 5601
+          env:
+            - name: SERVER_NAME
+              value: "analytics"
+            - name: SERVER_BASEPATH
+              value: "/analytics"
+            - name: SERVER_HOST
+              value: "0.0.0.0"
+            - name: ELASTICSEARCH_URL
+              value: http://elasticsearch.default.svc.cluster.local:9200
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+spec:
+  ports:
+    - protocol: TCP
+      name: analytics
+      port: 5601
+      targetPort: 5601
+  selector:
+    app: analytics

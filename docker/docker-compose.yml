@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=ali.koudri@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=avicenne
+      - PGADMIN_DEFAULT_PASSWORD=training2024
     volumes:
       - pgadmin-data:/var/lib/pgadmin4/storage
     ports:

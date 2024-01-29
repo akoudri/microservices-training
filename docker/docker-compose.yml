@@ -31,3 +31,13 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data:Z
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/html:/usr/share/nginx/html
+

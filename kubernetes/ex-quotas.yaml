@@ -10,10 +10,10 @@ metadata:
   namespace: quota-exercise-ns
 spec:
   hard:
-    requests.cpu: "1"  # Total amount of CPU that can be requested
-    requests.memory: 1Gi  # Total amount of memory that can be requested
-    limits.cpu: "2"  # Total amount of CPU that can be used as a limit
-    limits.memory: 2Gi  # Total amount of memory that can be used as a limit
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
 ---
 apiVersion: apps/v1
 kind: Deployment

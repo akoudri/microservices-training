@@ -20,4 +20,4 @@ spec:
     emptyDir: {}
 
 #kubectl logs nginx-with-sidecar nginx-container
-#kubectl logs nginx-with-sidecar nginx-container
+

@@ -34,12 +34,12 @@ spec:
       - name: hw
         image: karthequian/helloworld:latest
         env: 
-          - name: TITLE
+          - name: PG_DB_NAME
             valueFrom:
               configMapKeyRef:
                 name: example-config
                 key: title
-          - name: MESSAGE
+          - name: PG_DB_URL
             valueFrom:
               configMapKeyRef:
                 name: example-config

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hw
+spec:
+  containers:
+    - name: helloworld
+      image: karthequian/helloworld:black
+      ports:
+        - containerPort: 80

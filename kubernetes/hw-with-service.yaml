@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: helloworld
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: helloworld
-        image: karthequian/helloworld:latest
+        image: karthequian/helloworld:black
         ports:
         - containerPort: 80
 ---
@@ -23,10 +23,11 @@ kind: Service
 metadata:
   name: hw-service
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     protocol: TCP
     targetPort: 80
+    nodePort: 30007
   selector:
     app: helloworld

@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: helloworld
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: helloworld
-        image: karthequian/helloworld:black
+        image: karthequian/helloworld:blue
         ports:
         - containerPort: 80
 

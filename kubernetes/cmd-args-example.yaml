@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-env
+spec:
+  containers:
+    - name: demo
+      image: busybox
+      command: ["sh", "-c"]
+      args: ["echo $GREETING"]
+      env:
+        - name: GREETING
+          value: "Hello, Kubernetes with Environment Variable!"
+  restartPolicy: Never

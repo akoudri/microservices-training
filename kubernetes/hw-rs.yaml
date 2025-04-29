@@ -6,11 +6,11 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      app: hello-world
+      app: hw
   template:
     metadata:
       labels:
-        app: hello-world
+        app: hw
     spec:
       containers:
         - name: helloworld

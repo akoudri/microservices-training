@@ -1,55 +1,66 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: training
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: example-config
-  namespace: training
+  name: demo-config
 data:
-  title: Hello
-  message: How are you ?
-  app.properties: |
-    title=Hello
-    message=How are you ?
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hw
-  namespace: training
-spec:
-  selector:
-    matchLabels:
-      app: hw
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: hw
-    spec:
-      containers:
-      - name: hw
-        image: karthequian/helloworld:latest
-        env: 
-          - name: PG_DB_NAME
-            valueFrom:
-              configMapKeyRef:
-                name: example-config
-                key: title
-          - name: PG_DB_URL
-            valueFrom:
-              configMapKeyRef:
-                name: example-config
-                key: message
-        volumeMounts:
-          - name: config-volume
-            mountPath: "/config"
-            readOnly: true
-      volumes:
-        - name: config-volume
-          configMap: 
-            name: example-config
+  GREETING: "Hello from ConfigMap!"
+  FAREWELL: "Goodbye from ConfigMap!"
+  CONFIG_FILE: "This is a file from ConfigMap."
 
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-envfrom
+spec:
+  containers:
+    - name: demo
+      image: busybox
+      command: ["sh", "-c"]
+      args: ["echo $GREETING && echo $FAREWELL"]
+      envFrom:
+        - configMapRef:
+            name: demo-config
+  restartPolicy: Never
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-env
+spec:
+  containers:
+    - name: demo
+      image: busybox
+      command: ["sh", "-c"]
+      args: ["echo $GREETING"]
+      env:
+        - name: GREETING
+          valueFrom:
+            configMapKeyRef:
+              name: demo-config
+              key: GREETING
+  restartPolicy: Never
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-volume
+spec:
+  containers:
+    - name: demo
+      image: busybox
+      command: ["sh", "-c"]
+      args: ["cat /etc/config/CONFIG_FILE"]
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+  volumes:
+    - name: config-volume
+      configMap:
+        name: demo-config
+  restartPolicy: Never

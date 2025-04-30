@@ -17,6 +17,7 @@ spec:
   hostPath:
     path: /tmp/data
 ---
+# Launch a MongoDB StatefulSet with 3 replicas in clustering mode
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

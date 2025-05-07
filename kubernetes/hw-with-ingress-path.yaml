@@ -74,14 +74,15 @@ metadata:
   namespace: training
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    kubernetes.io/ingress.class: nginx
 spec:
+  ingressClassName: nginx
   rules:
   - http:
       paths:
       - path: /hello
         pathType: Prefix
         backend:
-          serviceName: helloworld-service
-          servicePort: 80
-
+          service:
+            name: helloworld-service
+            port:
+              number: 80

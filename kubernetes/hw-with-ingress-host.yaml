@@ -67,21 +67,23 @@ spec:
         ports:
         - containerPort: 80
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: host-based-ingress
-  namespace: training
-  annotations:
-    kubernetes.io/ingress.class: nginx
+  name: my-ingress
 spec:
+  ingressClassName: nginx
   rules:
-  - host: helloworld.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: helloworld-service
-          servicePort: 80
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: helloworld-service
+                port:
+                  number: 80
+
+
 

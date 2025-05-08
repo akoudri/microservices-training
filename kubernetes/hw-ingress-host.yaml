@@ -34,7 +34,7 @@ metadata:
   name: helloworld-service
   namespace: training
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - port: 80
     protocol: TCP

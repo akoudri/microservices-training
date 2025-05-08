@@ -34,7 +34,7 @@ metadata:
   name: helloworld-service
   namespace: training
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - port: 80
     protocol: TCP
@@ -71,6 +71,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: my-ingress
+  namespace: training
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
@@ -84,6 +87,4 @@ spec:
                 name: helloworld-service
                 port:
                   number: 80
-
-
-
+  

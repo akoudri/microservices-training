@@ -1,3 +1,4 @@
+# MetalLB is not compatible with GCP !
 1 - Configure firewall (configure-firewall.sh)
 2 - Install metallb (install-metallb.sh)
 3 - Provision public IP (provision-ip.sh)

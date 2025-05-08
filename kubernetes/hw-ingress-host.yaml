@@ -72,12 +72,10 @@ kind: Ingress
 metadata:
   name: my-ingress
   namespace: training
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-    - host: hello.example.com
+    - host: hello.upskillforge.com
       http:
         paths:
           - path: /

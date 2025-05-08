@@ -1,12 +1,11 @@
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
-  name: default-pool
+  name: public-ip-pool
   namespace: metallb-system
 spec:
   addresses:
-  - 10.132.0.240-10.132.0.250  # Nouvelle plage disponible
-  autoAssign: true
+    - 34.79.219.176/32
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -15,4 +14,4 @@ metadata:
   namespace: metallb-system
 spec:
   ipAddressPools:
-  - default-pool
+  - public-ip-pool

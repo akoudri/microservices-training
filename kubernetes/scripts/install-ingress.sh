@@ -5,7 +5,8 @@ helm repo update
 kubectl create namespace ingress-nginx
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
-  --set controller.service.annotations."metallb\.universe\.tf/address-pool"=default-pool \
-  --set controller.service.externalTrafficPolicy=Local \
   --set controller.ingressClassResource.name=nginx \
-  --set controller.ingressClassResource.controllerValue="k8s.io/nginx"
+  --set controller.service.loadBalancerIP=34.79.219.176
+
+# FIXME: solution temporaire pour le problème de webhook admission
+kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission

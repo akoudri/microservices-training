@@ -11,3 +11,6 @@ helm upgrade --install metallb metallb/metallb \
   --create-namespace \
   --namespace metallb-system \
   --set crds.validationFailurePolicy=Ignore
+
+# Étape 4 : Appliquer la configuration de MetalLB
+kubectl apply -f metallb-config.yaml

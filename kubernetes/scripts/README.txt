@@ -1,7 +1,6 @@
-1 - Configure firewall
-2 - Installer helm and then install metallb
-3 - Configure metallb
-4 - Installer ingress
-5 - Annoter ingress: kubectl annotate svc -n ingress-nginx ingress-nginx-controller metallb.universe.tf/address-pool=default-pool
-5 - Patcher ingress: kubectl patch svc -n ingress-nginx ingress-nginx-controller -p '{"spec":{"externalTrafficPolicy":"Local"}}'
-6 - Vérifier l'ip de l'ingress: kubectl get svc -n ingress-nginx ingress-nginx-controller -o wide
+1 - Configure firewall (configure-firewall.sh)
+2 - Install metallb (install-metallb.sh)
+3 - Provision public IP (provision-ip.sh)
+3 - Configure metallb (apply metallb-config.yaml -- configure public IP first)
+4 - Install ingress-nginx (install-ingress.sh -- configure public IP first)
+6 - Check installation: kubectl get svc -n ingress-nginx ingress-nginx-controller -o wide

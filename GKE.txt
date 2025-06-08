@@ -23,6 +23,19 @@ gcloud container clusters create-auto [CLUSTER_NAME] --region=europe-west1
 
 gcloud container clusters get-credentials [CLUSTER_NAME] --region europe-west1
 
+5 - Gérer les règles de firewall
+
+Exemple de règle:
+
+gcloud compute firewall-rules create allow-http \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --action=ALLOW \
+  --rules=tcp:80 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=http-server
+
 -------------------------------------------
 
 1- Remove cluster

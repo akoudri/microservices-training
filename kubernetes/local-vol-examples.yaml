@@ -11,6 +11,7 @@ spec:
     volumeMounts:
     - mountPath: /usr/share/nginx/html
       name: emptydir-volume
+      readOnly: false
   volumes:
   - name: emptydir-volume
     emptyDir: {}
@@ -28,6 +29,7 @@ spec:
     volumeMounts:
     - mountPath: /usr/share/nginx/html
       name: hostpath-volume
+      readOnly: false
   volumes:
   - name: hostpath-volume
     hostPath:

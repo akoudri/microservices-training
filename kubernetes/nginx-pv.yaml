@@ -21,6 +21,7 @@ spec:
         volumeMounts:
         - name: nginx-data
           mountPath: /usr/share/nginx/html
+          readOnly: false
         readinessProbe:
           httpGet:
             path: /

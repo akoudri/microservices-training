@@ -13,6 +13,7 @@ spec:
     volumeMounts:
     - mountPath: /usr/share/nginx/html
       name: html-volume
+      readOnly: false
   volumes:
   - name: html-volume
     hostPath:

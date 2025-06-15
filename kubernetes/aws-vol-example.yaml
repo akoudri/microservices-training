@@ -9,6 +9,7 @@ spec:
     volumeMounts:
     - mountPath: /test-ebs
       name: test-volume
+      readOnly: false
   volumes:
   - name: test-volume
     # Ce volume AWS EBS doit déjà exister.

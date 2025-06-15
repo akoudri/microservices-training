@@ -1,0 +1,19 @@
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: DATABASE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: webapp-secrets
+        key: database-password
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: webapp-secrets
+        key: api-key
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: nginx:1.21-alpine

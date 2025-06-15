@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hw
+spec:
+  selector:
+    matchLabels:
+      app: helloworld
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+        image: karthequian/helloworld:latest
+        resources:
+          requests:
+            memory: "8Mi"
+            cpu: "1"
+          limits:
+            memory: "16Mi"
+            cpu: "2"
+        ports:
+        - containerPort: 80
+

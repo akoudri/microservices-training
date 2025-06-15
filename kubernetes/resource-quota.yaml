@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: quota-example
+  namespace: quota-ns
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exceed-quota
+  namespace: quota-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exceed-quota
+  template:
+    metadata:
+      labels:
+        app: exceed-quota
+    spec:
+      containers:
+      - name: exceed-quota-container
+        image: nginx
+        resources:
+          requests:
+            cpu: "2"
+            memory: 3Gi
+          limits:
+            cpu: "3"
+            memory: 4Gi

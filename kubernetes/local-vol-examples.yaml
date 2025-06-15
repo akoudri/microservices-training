@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: emptydir-volume
+      readOnly: false
+  volumes:
+  - name: emptydir-volume
+    emptyDir: {}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-hostpath-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: hostpath-volume
+      readOnly: false
+  volumes:
+  - name: hostpath-volume
+    hostPath:
+      path: /data/nginx
+      type: DirectoryOrCreate

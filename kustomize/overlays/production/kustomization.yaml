@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: webapp-production
+
+namespace: production
+
+resources:
+  - ../../base
+  - ingress.yaml
+  - hpa.yaml
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: webapp-config
+    behavior: merge
+    literals:
+      - environment=production
+      - debug=false
+    files:
+      - app.properties
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+images:
+  - name: nginx
+    newTag: 1.21
+
+replicas:
+  - name: webapp
+    count: 3

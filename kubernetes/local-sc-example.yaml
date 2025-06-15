@@ -1,0 +1,60 @@
+# 1. StorageClass pour le stockage local
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+# 2. PersistentVolume utilisant un dossier local
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /data  # Ce dossier doit exister sur le nœud ciblé
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - node1
+---
+# 3. PersistentVolumeClaim qui demande le volume local
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 4. Pod qui utilise le PVC
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-local
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      volumeMounts:
+        - name: local-volume
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: local-volume
+      persistentVolumeClaim:
+        claimName: local-pvc

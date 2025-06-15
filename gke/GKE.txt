@@ -1,0 +1,33 @@
+# Création d'un cluster avec deux workers
+
+gcloud container clusters create test-cluster \
+  --zone=europe-west1-b \
+  --machine-type=e2-small \
+  --num-nodes=2 \
+  --disk-size=30GB \
+  --preemptible \
+  --no-enable-shielded-nodes \
+  --no-enable-autoupgrade
+
+# Activer une règle de firewall
+
+gcloud compute firewall-rules create allow-nodeport-<port> \
+  --allow tcp:<port>  \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --source-ranges=0.0.0.0/0 \
+  --description="Autorise l'accès au NodePort <port> sur tous les nœuds du cluster"
+
+# Création d'un volume
+gcloud compute disks create gke-pv --zone=europe-west1-b --size=10GB --type=pd-standard
+
+# Activation de l'API Gateway
+# Peut prendre 1 heure
+
+gcloud container clusters update test-cluster \
+  --location=europe-west1-b \
+  --gateway-api=standard
+# Vérification
+kubectl get crds | grep gateway
+kubectl get gatewayclass

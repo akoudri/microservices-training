@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: hw-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hw
+  template:
+    metadata:
+      labels:
+        app: hw
+    spec:
+      containers:
+        - name: helloworld
+          image: karthequian/helloworld:black
+          ports:
+            - containerPort: 80

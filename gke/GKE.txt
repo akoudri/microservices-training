@@ -22,3 +22,12 @@ gcloud compute firewall-rules create allow-nodeport-<port> \
 # Création d'un volume
 gcloud compute disks create gke-pv --zone=europe-west1-b --size=10GB --type=pd-standard
 
+# Activation de l'API Gateway
+# Peut prendre 1 heure
+
+gcloud container clusters update test-cluster \
+  --location=europe-west1-b \
+  --gateway-api=standard
+# Vérification
+kubectl get crds | grep gateway
+kubectl get gatewayclass

@@ -1,11 +1,4 @@
-# apiVersion: gateway.networking.k8s.io/v1
-# kind: GatewayClass
-# metadata:
-#   name: gke-l7-global-external-managed
-# spec:
-#   controllerName: networking.gke.io/gateway
-
-# ---
+# Activer au préalable l'API Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:

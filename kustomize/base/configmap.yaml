@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+data:
+  environment: "base"
+  debug: "false"
+  app.properties: |
+    server.port=80
+    logging.level=INFO
+    database.url=localhost:5432

@@ -1,0 +1,41 @@
+# Intro
+kubectl run hw --image=karthequian/helloworld:black --port=80
+kubectl expose pod hw --type=NodePort --port=80
+
+#RS
+kubectl scale rs hw-rs --replicas=5
+​​kubectl expose rs hw-rs --type=NodePort --port=80
+
+#Deployments
+kubectl create deployment --image=nginx nginx # Crée un déploiement​
+kubectl scale deployment nginx --replicas=5 # Rescale un déploiement​
+kubectl set image deployment nginx nginx=nginx:alpine3.21 # Change l'image d'un conteneur​
+kubect expose deployment nginx --port=80 # Expose un déploiement​
+kubectl edit deployment nginx # Edite un déploiement​
+kubectl rollout history deployment nginx # Affiche les révisions​
+kubectl rollout undo deployment nginx # Revenir à la version précédente
+
+kubectl create deployment --image=nginx --replicas=2 --dry-run=client -o yaml nginx
+
+#Selectors
+
+k get pods -n training --show-labels
+k get pods --selector env=production -n training
+k get pods --selector dev-lead=karthik -n training
+k get pods --selector dev-lead=karthik,env=staging -n training
+k get pods --selector dev-lead!=karthik,env=staging -n training
+k get pods -l 'release-version in (1.0,2.0)' -n training
+k get pods -l 'release-version in (1.0,2.0),team in (marketing,ecommerce)' -n training
+k get pods -l 'release-version notin (1.0,2.0)' -n training
+
+kubectl get pods --field-selector status.phase=Running​
+kubectl delete pod --field-selector=status.phase==Succeeded
+kubectl delete job --field-selector=status.successful=1
+kubectl get jobs --field-selector=status.conditions.type=Failed -o name | xargs kubectl delete
+
+#Services
+k expose deployment hw --type=NodePort
+k expose deployment hw --type=LoadBalancer --name=hello-lb
+
+#Quotas
+kubectl create namespace quota-ns

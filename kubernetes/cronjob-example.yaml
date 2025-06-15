@@ -16,7 +16,7 @@ spec:
             - -c
             - "date; echo Hello from your Kubernetes cluster"
           restartPolicy: OnFailure
-  sucessfulJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   concurrencyPolicy: Forbid
   suspend: false

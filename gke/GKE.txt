@@ -19,5 +19,6 @@ gcloud compute firewall-rules create allow-nodeport-<port> \
   --source-ranges=0.0.0.0/0 \
   --description="Autorise l'accès au NodePort <port> sur tous les nœuds du cluster"
 
-
+# Création d'un volume
+gcloud compute disks create gke-pv --zone=europe-west1-b --size=10GB --type=pd-standard
 

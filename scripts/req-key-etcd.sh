@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# To be executed in node master only
 if [ $# != 1 ]; then
   echo "Usage: $0 <key>"
   exit 1

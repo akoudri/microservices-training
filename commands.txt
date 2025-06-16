@@ -1,4 +1,7 @@
 # Intro
+kubectl create ns <votre-nom>
+kubectl config set-context --current --namespace=<votre-nom>
+
 kubectl run hw --image=karthequian/helloworld:black --port=80
 kubectl expose pod hw --type=NodePort --port=80
 

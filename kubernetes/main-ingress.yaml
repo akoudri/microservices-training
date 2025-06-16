@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.priority: "100"
+spec:
+  ingressClassName: traefik
+  rules:
+    # Main domain routing
+    - http:
+        paths:
+          # Analytics/Kibana
+          - path: /analytics
+            pathType: Prefix
+            backend:
+              service:
+                name: analytics-svc
+                port:
+                  number: 5601
+          # Backend API
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 80
+          # Traefik Dashboard
+          - path: /dashboard
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-dashboard-service
+                port:
+                  number: 8080
+---
+# Root redirect to analytics
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: root-redirect-ingress
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/redirect-regex: ^http://([^/]+)/?$ 
+    traefik.ingress.kubernetes.io/redirect-replacement: http://$1/analytics
+    traefik.ingress.kubernetes.io/router.priority: "50"
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name: analytics-svc
+                port:
+                  number: 5601

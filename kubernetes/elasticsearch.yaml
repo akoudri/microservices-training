@@ -15,15 +15,20 @@ spec:
       labels:
         app: elasticsearch
     spec:
+      securityContext:
+        fsGroup: 1000
       volumes:
         - name: esdata
           hostPath:
             path: /data/esdata
+            type: DirectoryOrCreate
       initContainers:
         - name: busybox
           image: busybox:1.28
           command:
             ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+          securityContext:
+            runAsUser: 0
           volumeMounts:
             - name: esdata
               mountPath: "/usr/share/elasticsearch/data"
@@ -40,20 +45,35 @@ spec:
               value: "single-node"
             - name: ES_JAVA_OPTS
               value: "-Xms512m -Xmx1g"
+            - name: cluster.name
+              value: "elasticsearch"
+            - name: node.name
+              value: "elasticsearch-0"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           volumeMounts:
             - mountPath: "/usr/share/elasticsearch/data"
               name: esdata
           resources:
             requests:
               memory: "1Gi"
+              cpu: "500m"
             limits:
               memory: "1Gi"
+              cpu: "1000m"
           readinessProbe:
             httpGet:
               path: /_cluster/health?wait_for_status=yellow
               port: 9200
             initialDelaySeconds: 30
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 30
 
 ---
 apiVersion: v1
@@ -102,23 +122,31 @@ spec:
               value: "analytics"
             - name: SERVER_BASEPATH
               value: "/analytics"
+            - name: SERVER_REWRITEBASEPATH
+              value: "true"
             - name: SERVER_HOST
               value: "0.0.0.0"
-            - name: ELASTICSEARCH_URL
-              value: http://elasticsearch.default.svc.cluster.local:9200
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch.default.svc.cluster.local:9200"
           readinessProbe:
             httpGet:
-              path: /
+              path: /analytics/api/status
               port: 5601
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /analytics/api/status
+              port: 5601
+            initialDelaySeconds: 120
+            periodSeconds: 30
           resources:
             requests:
               memory: "512Mi"
               cpu: "250m"
             limits:
               memory: "1Gi"
-              cpu: "1"
+              cpu: "1000m"
 
 ---
 apiVersion: v1
@@ -134,3 +162,5 @@ spec:
       port: 5601
       targetPort: 5601 
       nodePort: 30601 
+
+# Tester sur http://161.97.182.224:30601/analytics (remplacer par le noeud sur lequel tourne le service)

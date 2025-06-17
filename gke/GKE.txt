@@ -1,13 +1,35 @@
 # Création d'un cluster avec deux workers
 
+gcloud compute machine-types list --filter="zone:(europe-west1-b)" # machines disponibles
+
 gcloud container clusters create test-cluster \
   --zone=europe-west1-b \
-  --machine-type=e2-small \
-  --num-nodes=2 \
+  --machine-type=e2-medium \
+  --num-nodes=3 \
   --disk-size=30GB \
   --preemptible \
   --no-enable-shielded-nodes \
   --no-enable-autoupgrade
+
+# Installation de gcloud
+
+## Dans le cas général
+curl https://sdk.cloud.google.com | bash
+
+## Sur powershell
+(New-Object Net.WebClient).DownloadFile("https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe", "$env:Temp\GoogleCloudSDKInstaller.exe")
+& $env:Temp\GoogleCloudSDKInstaller.exe
+
+# Ajouter un utilisateur (ayant un compte google)
+
+gcloud projects add-iam-policy-binding <PROJECT_ID> \
+  --member="user:adresse@email.com" \
+  --role="roles/container.developer"
+
+gcloud init # choisir le projet GCP et la zone par défaut
+gcloud components install gke-gcloud-auth-plugin # la personne doit installer le plugin d'authentification
+gcloud auth login # la personne ajoutée doit s'authentifier
+gcloud container clusters get-credentials test-cluster --zone europe-west1-b
 
 # Activer une règle de firewall
 
@@ -28,6 +50,6 @@ gcloud compute disks create gke-pv --zone=europe-west1-b --size=10GB --type=pd-s
 gcloud container clusters update test-cluster \
   --location=europe-west1-b \
   --gateway-api=standard
-# Vérification
-kubectl get crds | grep gateway
-kubectl get gatewayclass
+
+kubectl get crds | grep gateway # Vérification
+kubectl get gatewayclass # Vérification

@@ -4,7 +4,6 @@ metadata:
   name: elasticsearch
   labels:
     app: elasticsearch
-
 spec:
   replicas: 1
   selector:
@@ -161,6 +160,6 @@ spec:
     - protocol: TCP
       port: 5601
       targetPort: 5601 
-      nodePort: 30601 
+      nodePort: 30883 
 
 # Tester sur http://161.97.182.224:30601/analytics (remplacer par le noeud sur lequel tourne le service)

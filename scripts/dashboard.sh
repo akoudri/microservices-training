@@ -15,4 +15,4 @@ helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dash
 
 # kubectl -n kubernetes-dashboard create token admin-user
 
-# kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard 8443:443
+# kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443

@@ -17,3 +17,5 @@ kubectl apply -f telemetry.yaml
 # kubectl get secret --namespace observability prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
 # kubectl port-forward svc/prometheus-grafana -n observability 3000:80
+
+# kubectl port-forward -n observability svc/prometheus-kube-prometheus-prometheus 9090:9090

@@ -14,3 +14,10 @@ helm upgrade --install metallb metallb/metallb \
 
 # Étape 4 : Appliquer la configuration de MetalLB
 kubectl apply -f metallb-config.yaml
+
+# Étape 5 : Vérifier l'état du déploiement MetalLB
+# kubectl get pods -n metallb-system
+
+
+# Étape 6 : Vérifier que la configuration a été appliquée
+# kubectl -n metallb-system get ipaddresspool

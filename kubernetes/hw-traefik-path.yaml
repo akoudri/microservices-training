@@ -17,10 +17,6 @@ spec:
     metadata:
       labels:
         app: helloworld
-        env: production
-        author: karthequian
-        tiers: front
-        version: "1.0"
     spec:
       containers:
         - name: helloworld
@@ -42,21 +38,17 @@ spec:
   selector:
     app: helloworld
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: my-ingress
+  name: helloworld-ingressroute
   namespace: training
 spec:
-  ingressClassName: gce
-  rules:
-    - host: hello.upskillforge.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: helloworld-service
-                port:
-                  number: 80
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`upskillforge.com`) && PathPrefix(`/hello`)
+      kind: Rule
+      services:
+        - name: helloworld-service
+          port: 80

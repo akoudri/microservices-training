@@ -40,5 +40,27 @@ kubectl get jobs --field-selector=status.conditions.type=Failed -o name | xargs 
 k expose deployment hw --type=NodePort
 k expose deployment hw --type=LoadBalancer --name=hello-lb
 
+kubectl create deployment nginx-dep --image=nginx
+kubectl expose deployment nginx-dep \
+  --name=nginx-service \
+  --port=80 \
+  --target-port=80 \
+  --type=ClusterIP
+
+kubectl run -it --rm --restart=Never test-shell --image=curlimages/curl -- sh
+
+kubectl create deployment postgres \
+  --image=postgres:14 \
+  --env="POSTGRES_PASSWORD=training" \
+  --env="POSTGRES_USER=training" \
+  --env="POSTGRES_DB=training"
+
+kubectl expose deployment postgres \
+  --name=postgres-service \
+  --port=5432 \
+  --target-port=5432 \
+  --type=NodePort
+
+
 #Quotas
 kubectl create namespace quota-ns

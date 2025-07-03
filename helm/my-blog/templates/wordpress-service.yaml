@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "my-blog.wordpress.fullname" . }}
+  labels:
+    {{- include "my-blog.wordpress.labels" . | nindent 4 }}
+  {{- with .Values.wordpress.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.wordpress.service.type }}
+  {{- if and (eq .Values.wordpress.service.type "LoadBalancer") (not (empty .Values.wordpress.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.wordpress.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.wordpress.service.type "ClusterIP") (not (empty .Values.wordpress.service.clusterIP)) }}
+  clusterIP: {{ .Values.wordpress.service.clusterIP }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.wordpress.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (or (eq .Values.wordpress.service.type "NodePort") (eq .Values.wordpress.service.type "LoadBalancer")) (not (empty .Values.wordpress.service.nodePorts.http)) }}
+      nodePort: {{ .Values.wordpress.service.nodePorts.http }}
+      {{- end }}
+    - port: {{ .Values.wordpress.service.httpsPort }}
+      targetPort: https
+      protocol: TCP
+      name: https
+      {{- if and (or (eq .Values.wordpress.service.type "NodePort") (eq .Values.wordpress.service.type "LoadBalancer")) (not (empty .Values.wordpress.service.nodePorts.https)) }}
+      nodePort: {{ .Values.wordpress.service.nodePorts.https }}
+      {{- end }}
+  selector:
+    {{- include "my-blog.wordpress.selectorLabels" . | nindent 4 }}

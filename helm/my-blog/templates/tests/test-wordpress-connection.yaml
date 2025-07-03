@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "my-blog.fullname" . }}-test-wordpress"
+  labels:
+    {{- include "my-blog.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: wget
+      image: busybox:1.35
+      command: ['wget']
+      args: ['{{ include "my-blog.wordpress.fullname" . }}:{{ .Values.wordpress.service.port }}']
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+---
+{{- if .Values.mariadb.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "my-blog.fullname" . }}-test-mariadb"
+  labels:
+    {{- include "my-blog.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: mysql-client
+      image: bitnami/mysql:8.0
+      command:
+        - /bin/bash
+        - -ec
+        - |
+          mysql -h {{ include "my-blog.mariadb.fullname" . }} -P {{ .Values.mariadb.primary.service.port }} -u {{ .Values.mariadb.auth.username }} -p$MYSQL_PWD -e "SELECT 1"
+      env:
+        - name: MYSQL_PWD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "my-blog.mariadb.secretName" . }}
+              key: mariadb-password
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+{{- end }}

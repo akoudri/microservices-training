@@ -1,0 +1,23 @@
+{{- if and .Values.mariadb.enabled .Values.mariadb.primary.persistence.enabled (not .Values.mariadb.primary.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "my-blog.mariadb.claimName" . }}
+  labels:
+    {{- include "my-blog.mariadb.labels" . | nindent 4 }}
+  {{- with .Values.mariadb.primary.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- range .Values.mariadb.primary.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.mariadb.primary.persistence.size | quote }}
+  {{- if (include "my-blog.mariadb.storageClass" .) }}
+  storageClassName: {{ include "my-blog.mariadb.storageClass" . }}
+  {{- end }}
+{{- end }}

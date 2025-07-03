@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: webapp-development-with-cache
+
+namespace: development
+
+resources:
+  - ../../base
+
+components:
+  - ../../components/redis
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: webapp-config
+    behavior: merge
+    literals:
+      - environment=development
+      - debug=true
+      - cache_enabled=true
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+
+images:
+  - name: nginx
+    newTag: 1.21-alpine

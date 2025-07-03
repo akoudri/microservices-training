@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+metadata:
+  name: logging-component
+
+resources:
+  - fluentd-daemonset.yaml
+  - fluentd-configmap.yaml
+
+patchesStrategicMerge:
+  - deployment-logging-patch.yaml
+
+commonLabels:
+  logging: enabled
+  component: logging
+
+commonAnnotations:
+  logging.framework: fluentd
+  log.level: info

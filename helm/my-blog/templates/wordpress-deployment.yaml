@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-blog.wordpress.fullname" . }}
+  labels:
+    {{- include "my-blog.wordpress.labels" . | nindent 4 }}
+  {{- with (include "my-blog.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.wordpress.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "my-blog.wordpress.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with (include "my-blog.annotations" .) }}
+      annotations:
+        {{- . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "my-blog.wordpress.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "my-blog.serviceAccountName" . }}
+      containers:
+        - name: wordpress
+          image: {{ include "my-blog.wordpress.image" . }}
+          imagePullPolicy: {{ .Values.wordpress.image.pullPolicy }}
+          env:
+            {{- include "my-blog.wordpress.env" . | nindent 12 }}
+          {{- with (include "my-blog.wordpress.envFromConfigMap" .) }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with (include "my-blog.wordpress.envFromSecret" .) }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+          {{- if .Values.wordpress.livenessProbe.enabled }}
+          livenessProbe:
+            {{- include "my-blog.probe" .Values.wordpress.livenessProbe | nindent 12 }}
+            httpGet:
+              path: {{ .Values.wordpress.livenessProbe.httpGet.path }}
+              port: {{ .Values.wordpress.livenessProbe.httpGet.port }}
+              scheme: {{ .Values.wordpress.livenessProbe.httpGet.scheme }}
+          {{- end }}
+          {{- if .Values.wordpress.readinessProbe.enabled }}
+          readinessProbe:
+            {{- include "my-blog.probe" .Values.wordpress.readinessProbe | nindent 12 }}
+            httpGet:
+              path: {{ .Values.wordpress.readinessProbe.httpGet.path }}
+              port: {{ .Values.wordpress.readinessProbe.httpGet.port }}
+              scheme: {{ .Values.wordpress.readinessProbe.httpGet.scheme }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.wordpress.resources | nindent 12 }}
+          volumeMounts:
+            - name: wordpress-data
+              mountPath: /bitnami/wordpress
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: wordpress-data
+        {{- if .Values.wordpress.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "my-blog.wordpress.claimName" . }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}

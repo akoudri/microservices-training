@@ -1,0 +1,23 @@
+{{- if and .Values.wordpress.persistence.enabled (not .Values.wordpress.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "my-blog.wordpress.claimName" . }}
+  labels:
+    {{- include "my-blog.wordpress.labels" . | nindent 4 }}
+  {{- with .Values.wordpress.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- range .Values.wordpress.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.wordpress.persistence.size | quote }}
+  {{- if (include "my-blog.storageClass" .) }}
+  storageClassName: {{ include "my-blog.storageClass" . }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,184 @@
+# Default values for my-blog.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configuration
+global:
+  storageClass: ""
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# WordPress configuration
+wordpress:
+  # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+  replicaCount: 1
+
+  image:
+    registry: docker.io
+    repository: bitnami/wordpress
+    tag: "6.4.2-debian-11-r0"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  # WordPress admin credentials
+  auth:
+    username: admin
+    password: ""
+    email: admin@example.com
+    firstName: Admin
+    lastName: User
+    blogName: "My Awesome Blog"
+    existingSecret: ""
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 80
+    httpsPort: 443
+    nodePorts:
+      http: ""
+      https: ""
+    clusterIP: ""
+    loadBalancerIP: ""
+    annotations: {}
+
+  # Ingress configuration
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: blog.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+  # Persistence configuration
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    annotations: {}
+
+  # Resource limits
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  # Health checks
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /wp-admin/install.php
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 120
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /wp-login.php
+      port: http
+      scheme: HTTP
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+
+# MariaDB configuration
+mariadb:
+  enabled: true
+
+  image:
+    registry: docker.io
+    repository: bitnami/mariadb
+    tag: "10.11.6-debian-11-r0"
+    pullPolicy: IfNotPresent
+
+  # Database configuration
+  auth:
+    rootPassword: ""
+    database: bitnami_wordpress
+    username: bn_wordpress
+    password: ""
+    existingSecret: ""
+
+  # Primary database configuration
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+      annotations: {}
+
+    service:
+      type: ClusterIP
+      port: 3306
+      nodePort: ""
+
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
+
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+      failureThreshold: 3
+
+# Service Account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Extra configuration
+extraEnvVars: []
+extraEnvVarsCM: ""
+extraEnvVarsSecret: ""
+extraVolumes: []
+extraVolumeMounts: []
+
+# Override names
+nameOverride: ""
+fullnameOverride: ""
+
+# Common labels and annotations
+commonLabels: {}
+commonAnnotations: {}

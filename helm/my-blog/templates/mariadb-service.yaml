@@ -1,0 +1,27 @@
+{{- if .Values.mariadb.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "my-blog.mariadb.fullname" . }}
+  labels:
+    {{- include "my-blog.mariadb.labels" . | nindent 4 }}
+  {{- with (include "my-blog.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.mariadb.primary.service.type }}
+  {{- if and (eq .Values.mariadb.primary.service.type "ClusterIP") (not (empty .Values.mariadb.primary.service.clusterIP)) }}
+  clusterIP: {{ .Values.mariadb.primary.service.clusterIP }}
+  {{- end }}
+  ports:
+    - port: {{ .Values.mariadb.primary.service.port }}
+      targetPort: mysql
+      protocol: TCP
+      name: mysql
+      {{- if and (or (eq .Values.mariadb.primary.service.type "NodePort") (eq .Values.mariadb.primary.service.type "LoadBalancer")) (not (empty .Values.mariadb.primary.service.nodePort)) }}
+      nodePort: {{ .Values.mariadb.primary.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "my-blog.mariadb.selectorLabels" . | nindent 4 }}
+{{- end }}

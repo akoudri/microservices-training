@@ -1,0 +1,89 @@
+{{- if .Values.mariadb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-blog.mariadb.fullname" . }}
+  labels:
+    {{- include "my-blog.mariadb.labels" . | nindent 4 }}
+  {{- with (include "my-blog.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "my-blog.mariadb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with (include "my-blog.annotations" .) }}
+      annotations:
+        {{- . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "my-blog.mariadb.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "my-blog.serviceAccountName" . }}
+      containers:
+        - name: mariadb
+          image: {{ include "my-blog.mariadb.image" . }}
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "my-blog.mariadb.secretName" . }}
+                  key: mariadb-root-password
+            - name: MARIADB_DATABASE
+              value: {{ .Values.mariadb.auth.database | quote }}
+            - name: MARIADB_USER
+              value: {{ .Values.mariadb.auth.username | quote }}
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "my-blog.mariadb.secretName" . }}
+                  key: mariadb-password
+          ports:
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          {{- if .Values.mariadb.primary.livenessProbe.enabled }}
+          livenessProbe:
+            {{- include "my-blog.probe" .Values.mariadb.primary.livenessProbe | nindent 12 }}
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  password_aux="${MARIADB_ROOT_PASSWORD:-}"
+                  mysqladmin status -uroot -p"${password_aux}"
+          {{- end }}
+          {{- if .Values.mariadb.primary.readinessProbe.enabled }}
+          readinessProbe:
+            {{- include "my-blog.probe" .Values.mariadb.primary.readinessProbe | nindent 12 }}
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - |
+                  password_aux="${MARIADB_ROOT_PASSWORD:-}"
+                  mysqladmin status -uroot -p"${password_aux}"
+          {{- end }}
+          resources:
+            {{- toYaml .Values.mariadb.primary.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/mariadb
+      volumes:
+        - name: data
+        {{- if .Values.mariadb.primary.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "my-blog.mariadb.claimName" . }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- end }}

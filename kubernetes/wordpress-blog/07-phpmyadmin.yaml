@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  namespace: wordpress-blog
+  labels:
+    app: phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+        - name: phpmyadmin
+          image: phpmyadmin:5.2
+          ports:
+            - containerPort: 80
+          env:
+            - name: PMA_HOST
+              value: mariadb-service
+            - name: PMA_PORT
+              value: "3306"
+            - name: PMA_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wordpress-secrets
+                  key: mysql-user
+            - name: PMA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wordpress-secrets
+                  key: mysql-password
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wordpress-secrets
+                  key: mysql-root-password
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+  namespace: wordpress-blog
+  labels:
+    app: phpmyadmin
+spec:
+  selector:
+    app: phpmyadmin
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30081
+      name: http
+  type: NodePort

@@ -1,0 +1,9 @@
+helm dependency update ./my-blog
+
+helm lint ./my-blog
+
+helm install mon-release-test --dry-run ./my-blog
+
+helm package ./my-blog
+
+helm install mon-app ./mon-chart-exemple-0.1.0.tgz

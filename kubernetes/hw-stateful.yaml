@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: helloworld
+spec:
+  serviceName: "hw-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+        - name: helloworld
+          image: karthequian/helloworld:black
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hw-headless
+spec:
+  clusterIP: None
+  selector:
+    app: helloworld
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hw-service
+spec:
+  type: NodePort
+  selector:
+    app: helloworld
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+      nodePort: 30007

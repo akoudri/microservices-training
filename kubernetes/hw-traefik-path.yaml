@@ -39,9 +39,48 @@ spec:
     app: helloworld
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-hello-prefix
+  namespace: training
+spec:
+  stripPrefix:
+    prefixes:
+      - /hello
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: helloworld-ingressroute
+  namespace: training
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`upskillforge.com`) && PathPrefix(`/hello`)
+      kind: Rule
+      middlewares:
+        - name: strip-hello-prefix
+      services:
+        - name: helloworld-service
+          port: 80
+  tls:
+    certResolver: letsencrypt
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-https
+  namespace: training
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: helloworld-redirect
   namespace: training
 spec:
   entryPoints:
@@ -49,6 +88,8 @@ spec:
   routes:
     - match: Host(`upskillforge.com`) && PathPrefix(`/hello`)
       kind: Rule
+      middlewares:
+        - name: redirect-to-https
       services:
         - name: helloworld-service
           port: 80

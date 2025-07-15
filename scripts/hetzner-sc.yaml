@@ -1,0 +1,25 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hetzner-smb-storage
+provisioner: smb.csi.k8s.io
+parameters:
+  # Chemin vers votre partage SMB/CIFS
+  source: "//u474420.your-storagebox.de/backup"
+
+  # Spécifie comment le driver doit s'authentifier
+  csi.storage.k8s.io/provisioner-secret-name: "hetzner-smb-secret"
+  csi.storage.k8s.io/provisioner-secret-namespace: "default"
+  csi.storage.k8s.io/node-stage-secret-name: "hetzner-smb-secret"
+  csi.storage.k8s.io/node-stage-secret-namespace: "default"
+
+# Permet de redimensionner les volumes à la volée
+allowVolumeExpansion: true
+
+# Politique de montage
+mountOptions:
+  - dir_mode=0770
+  - file_mode=0770
+  - uid=10000
+  - gid=10000
+  - vers=3.0

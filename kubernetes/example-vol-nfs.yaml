@@ -1,0 +1,62 @@
+# Example: How other applications can use the same Hetzner SMB storage class
+# This demonstrates that the storage class is now namespace-independent
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myapp-namespace
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myapp-data
+  namespace: myapp-namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hetzner-smb-storage
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: myapp-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: myapp-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: myapp-namespace
+spec:
+  selector:
+    app: myapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

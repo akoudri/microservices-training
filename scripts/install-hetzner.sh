@@ -11,7 +11,7 @@ helm install csi-driver-smb csi-driver-smb/csi-driver-smb \
 
 kubectl create secret generic hetzner-smb-secret \
   --from-literal=username='u474420' \
-  --from-literal=password='WeusCloud2025!!' \
+  --from-literal=password='Yyx7cXB)czSm$rT' \
   --namespace default
 
 kubectl apply -f hetzner-sc.yaml

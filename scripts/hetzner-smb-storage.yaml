@@ -4,19 +4,13 @@ metadata:
   name: hetzner-smb-storage
 provisioner: smb.csi.k8s.io
 parameters:
-  # Chemin vers votre partage SMB/CIFS
   source: "//u474420.your-storagebox.de/backup"
-
-  # Spécifie comment le driver doit s'authentifier
   csi.storage.k8s.io/provisioner-secret-name: "hetzner-smb-secret"
-  csi.storage.k8s.io/provisioner-secret-namespace: "kube-system"
+  csi.storage.k8s.io/provisioner-secret-namespace: "registry"
   csi.storage.k8s.io/node-stage-secret-name: "hetzner-smb-secret"
-  csi.storage.k8s.io/node-stage-secret-namespace: "kube-system"
-
-# Permet de redimensionner les volumes à la volée
+  csi.storage.k8s.io/node-stage-secret-namespace: "registry"
+reclaimPolicy: Retain
 allowVolumeExpansion: true
-
-# Politique de montage
 mountOptions:
   - vers=2.1
   - uid=999

@@ -160,9 +160,19 @@ spec:
 
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-https
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: analytics-http
+  name: analytics-redirect
 spec:
   entryPoints:
     - web
@@ -190,17 +200,7 @@ spec:
         - name: analytics-svc
           port: 5601
   tls:
-    certResolver: default
-
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: redirect-to-https
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
+    certResolver: letsencrypt
 
 # Access Kibana at: https://analytics.upskillforge.com
 # HTTP requests will be automatically redirected to HTTPS

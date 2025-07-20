@@ -119,23 +119,19 @@ spec:
           env:
             - name: SERVER_NAME
               value: "analytics"
-            - name: SERVER_BASEPATH
-              value: "/analytics"
-            - name: SERVER_REWRITEBASEPATH
-              value: "true"
             - name: SERVER_HOST
               value: "0.0.0.0"
             - name: ELASTICSEARCH_HOSTS
               value: "http://elasticsearch.default.svc.cluster.local:9200"
           readinessProbe:
             httpGet:
-              path: /analytics/api/status
+              path: /api/status
               port: 5601
             initialDelaySeconds: 60
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /analytics/api/status
+              path: /api/status
               port: 5601
             initialDelaySeconds: 120
             periodSeconds: 30
@@ -153,13 +149,59 @@ kind: Service
 metadata:
   name: analytics-svc
 spec:
-  type: NodePort 
+  type: NodePort
   selector:
     app: analytics
   ports:
     - protocol: TCP
       port: 5601
-      targetPort: 5601 
-      nodePort: 30883 
+      targetPort: 5601
+      nodePort: 30883
 
-# Tester sur http://161.97.182.224:30601/analytics (remplacer par le noeud sur lequel tourne le service)
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: analytics-http
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`analytics.upskillforge.com`)
+      kind: Rule
+      middlewares:
+        - name: redirect-to-https
+      services:
+        - name: analytics-svc
+          port: 5601
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: analytics-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`analytics.upskillforge.com`)
+      kind: Rule
+      services:
+        - name: analytics-svc
+          port: 5601
+  tls:
+    certResolver: default
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-to-https
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+# Access Kibana at: https://analytics.upskillforge.com
+# HTTP requests will be automatically redirected to HTTPS
+# Or access directly via: http://195.179.227.12:30883 (NodePort still available as backup)

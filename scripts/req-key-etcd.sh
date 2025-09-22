@@ -6,7 +6,7 @@ if [ $# != 1 ]; then
   exit 1
 fi
 
-kubectl exec -n kube-system etcd-vmi2601045 -- \
+kubectl exec -n kube-system etcd-master1 -- \
   etcdctl --write-out=json \
     --cacert /etc/kubernetes/pki/etcd/ca.crt \
     --cert /etc/kubernetes/pki/etcd/server.crt \

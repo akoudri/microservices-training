@@ -15,21 +15,33 @@ spec:
       labels:
         app: elasticsearch
     spec:
+      securityContext:
+        fsGroup: 1000
       volumes:
         - name: esdata
-          hostPath:
-            path: /data/esdata
+          emptyDir: {}
       initContainers:
         - name: busybox
           image: busybox:1.28
+          securityContext:
+            runAsUser: 0
+            privileged: true
           command:
-            ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+            - sh
+            - -c
+            - |
+              mkdir -p /usr/share/elasticsearch/data
+              chown -R 1000:1000 /usr/share/elasticsearch/data
+              sysctl -w vm.max_map_count=262144
           volumeMounts:
             - name: esdata
               mountPath: "/usr/share/elasticsearch/data"
       containers:
         - name: elasticsearch
           image: elasticsearch:7.17.4
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
           ports:
             - name: es1
               containerPort: 9200
@@ -45,15 +57,23 @@ spec:
               name: esdata
           resources:
             requests:
-              memory: "1Gi"
+              memory: "512Mi"
+              cpu: "500m"
             limits:
-              memory: "1Gi"
+              memory: "2Gi"
+              cpu: "1"
           readinessProbe:
             httpGet:
               path: /_cluster/health?wait_for_status=yellow
               port: 9200
             initialDelaySeconds: 30
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 30
 
 ---
 apiVersion: v1
@@ -91,6 +111,21 @@ spec:
       labels:
         app: analytics
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: wait-for-elasticsearch
+          image: curlimages/curl:7.85.0
+          command:
+            - sh
+            - -c
+            - |
+              until curl -s http://elasticsearch:9200/_cluster/health | grep -q '"status":"green\|yellow"'; do
+                echo "Waiting for Elasticsearch to be ready..."
+                sleep 10
+              done
+              echo "Elasticsearch is ready!"
       containers:
         - name: analytics
           image: kibana:7.17.4
@@ -100,18 +135,26 @@ spec:
           env:
             - name: SERVER_NAME
               value: "analytics"
-            - name: SERVER_BASEPATH
-              value: "/analytics"
             - name: SERVER_HOST
               value: "0.0.0.0"
-            - name: ELASTICSEARCH_URL
-              value: http://elasticsearch.default.svc.cluster.local:9200
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://elasticsearch:9200"
+            - name: ELASTICSEARCH_REQUESTTIMEOUT
+              value: "132000"
+            - name: ELASTICSEARCH_SHARDTIMEOUT
+              value: "30000"
           readinessProbe:
             httpGet:
-              path: /
+              path: /api/status
               port: 5601
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/status
+              port: 5601
+            initialDelaySeconds: 120
+            periodSeconds: 30
           resources:
             requests:
               memory: "512Mi"
@@ -126,11 +169,11 @@ kind: Service
 metadata:
   name: analytics-svc
 spec:
-  type: NodePort 
+  type: NodePort
   selector:
     app: analytics
   ports:
     - protocol: TCP
       port: 5601
-      targetPort: 5601 
-      nodePort: 30601 
+      targetPort: 5601
+      nodePort: 30601

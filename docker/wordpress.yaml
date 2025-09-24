@@ -37,14 +37,14 @@ spec:
   claimRef:
     namespace: training
     name: mysql-storage-mariadb-0
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
+nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
       - matchExpressions:
-        - key: kubernetes.io/os
-          operator: In
-          values:
-          - linux
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+              - worker1
 ---
 # WordPress PersistentVolume
 apiVersion: v1
@@ -69,11 +69,11 @@ spec:
   nodeAffinity:
     required:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/os
-          operator: In
-          values:
-          - linux
+        - matchExpressions:
+            - key: kubernetes.io/os
+              operator: In
+              values:
+                - linux
 ---
 # MariaDB Secret
 apiVersion: v1

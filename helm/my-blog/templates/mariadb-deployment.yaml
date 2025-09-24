@@ -1,6 +1,6 @@
 {{- if .Values.mariadb.enabled }}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "my-blog.mariadb.fullname" . }}
   labels:
@@ -10,6 +10,7 @@ metadata:
     {{- . | nindent 4 }}
   {{- end }}
 spec:
+  serviceName: {{ include "my-blog.mariadb.fullname" . }}
   replicas: 1
   selector:
     matchLabels:
@@ -78,12 +79,30 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /bitnami/mariadb
+  {{- if .Values.mariadb.primary.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "my-blog.mariadb.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          {{- range .Values.mariadb.primary.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.primary.persistence.size | quote }}
+        {{- if .Values.mariadb.primary.persistence.storageClass }}
+        {{- if (eq "-" .Values.mariadb.primary.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.mariadb.primary.persistence.storageClass | quote }}
+        {{- end }}
+        {{- end }}
+  {{- else }}
       volumes:
         - name: data
-        {{- if .Values.mariadb.primary.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "my-blog.mariadb.claimName" . }}
-        {{- else }}
           emptyDir: {}
-        {{- end }}
+  {{- end }}
 {{- end }}

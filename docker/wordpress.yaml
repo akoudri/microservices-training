@@ -67,13 +67,13 @@ spec:
     namespace: training
     name: wordpress-pvc
   nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/os
-              operator: In
-              values:
-                - linux
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+      - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+              - worker1
 ---
 # MariaDB Secret
 apiVersion: v1

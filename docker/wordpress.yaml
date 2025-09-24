@@ -17,6 +17,64 @@ volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 ---
+# MariaDB PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-pv
+  labels:
+    app: mariadb
+    pv-type: mariadb
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /tmp/mariadb-data
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: training
+    name: mysql-storage-mariadb-0
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/os
+          operator: In
+          values:
+          - linux
+---
+# WordPress PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wordpress-pv
+  labels:
+    app: wordpress
+    pv-type: wordpress
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  hostPath:
+    path: /tmp/wordpress-data
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: training
+    name: wordpress-pvc
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/os
+          operator: In
+          values:
+          - linux
+---
 # MariaDB Secret
 apiVersion: v1
 kind: Secret
@@ -272,66 +330,66 @@ spec:
       name: web
   selector:
     app: wordpress
----
-# phpMyAdmin Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: phpmyadmin
-  namespace: training
-  labels:
-    app: phpmyadmin
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: phpmyadmin
-  template:
-    metadata:
-      labels:
-        app: phpmyadmin
-    spec:
-      containers:
-        - name: phpmyadmin
-          image: phpmyadmin:5.2
-          ports:
-            - containerPort: 80
-              name: web
-          env:
-            - name: PMA_HOST
-              value: mariadb
-            - name: PMA_PORT
-              value: "3306"
-            - name: PMA_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: mariadb-config
-                  key: mysql-user
-            - name: PMA_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: mysql-password
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mariadb-secret
-                  key: mysql-root-password
----
-# phpMyAdmin Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: phpmyadmin
-  namespace: training
-  labels:
-    app: phpmyadmin
-spec:
-  type: NodePort
-  ports:
-    - port: 80
-      targetPort: 80
-      nodePort: 30081
-      name: web
-  selector:
-    app: phpmyadmin
+# ---
+# # phpMyAdmin Deployment
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: phpmyadmin
+#   namespace: training
+#   labels:
+#     app: phpmyadmin
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: phpmyadmin
+#   template:
+#     metadata:
+#       labels:
+#         app: phpmyadmin
+#     spec:
+#       containers:
+#         - name: phpmyadmin
+#           image: phpmyadmin:5.2
+#           ports:
+#             - containerPort: 80
+#               name: web
+#           env:
+#             - name: PMA_HOST
+#               value: mariadb
+#             - name: PMA_PORT
+#               value: "3306"
+#             - name: PMA_USER
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: mariadb-config
+#                   key: mysql-user
+#             - name: PMA_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: mariadb-secret
+#                   key: mysql-password
+#             - name: MYSQL_ROOT_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: mariadb-secret
+#                   key: mysql-root-password
+# ---
+# # phpMyAdmin Service
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: phpmyadmin
+#   namespace: training
+#   labels:
+#     app: phpmyadmin
+# spec:
+#   type: NodePort
+#   ports:
+#     - port: 80
+#       targetPort: 80
+#       nodePort: 30081
+#       name: web
+#   selector:
+#     app: phpmyadmin

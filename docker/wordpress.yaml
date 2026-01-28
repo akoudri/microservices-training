@@ -1,0 +1,321 @@
+# WordPress blog stack with MariaDB and phpMyAdmin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+  labels:
+    app: wordpress-blog
+---
+# Local StorageClass for development/testing - using local-path-provisioner
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+---
+# MariaDB Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-secret
+  namespace: training
+type: Opaque
+stringData:
+  mysql-root-password: "rootpassword123"
+  mysql-password: "wordpress123"
+---
+# MariaDB ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-config
+  namespace: training
+data:
+  mysql-database: "wordpress"
+  mysql-user: "wordpress"
+---
+# MariaDB StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: training
+  labels:
+    app: mariadb
+spec:
+  serviceName: mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.11
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mysql-root-password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mariadb-config
+                  key: mysql-database
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mariadb-config
+                  key: mysql-user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mysql-password
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 20
+          readinessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 20
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-storage
+      spec:
+        storageClassName: local-storage
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+---
+# MariaDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: training
+  labels:
+    app: mariadb
+spec:
+  ports:
+    - port: 3306
+      name: mysql
+  selector:
+    app: mariadb
+  clusterIP: None
+---
+# WordPress PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-pvc
+  namespace: training
+  labels:
+    app: wordpress
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# WordPress ConfigMap for uploads.ini
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-config
+  namespace: training
+data:
+  uploads.ini: |
+    file_uploads = On
+    memory_limit = 256M
+    upload_max_filesize = 64M
+    post_max_size = 64M
+    max_execution_time = 600
+---
+# WordPress Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: training
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress:6.4-apache
+          ports:
+            - containerPort: 80
+              name: web
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mariadb:3306
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mariadb-config
+                  key: mysql-user
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-secret
+                  key: mysql-password
+            - name: WORDPRESS_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mariadb-config
+                  key: mysql-database
+            - name: WORDPRESS_TABLE_PREFIX
+              value: "wp_"
+            - name: WORDPRESS_CONFIG_EXTRA
+              value: |
+                define('WP_DEBUG', true);
+                define('WP_DEBUG_LOG', true);
+          volumeMounts:
+            - name: wordpress-storage
+              mountPath: /var/www/html
+            - name: php-config
+              mountPath: /usr/local/etc/php/conf.d/uploads.ini
+              subPath: uploads.ini
+          livenessProbe:
+            httpGet:
+              path: /wp-admin/install.php
+              port: 80
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /wp-admin/install.php
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+      volumes:
+        - name: wordpress-storage
+          persistentVolumeClaim:
+            claimName: wordpress-pvc
+        - name: php-config
+          configMap:
+            name: wordpress-config
+---
+# WordPress Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  namespace: training
+  labels:
+    app: wordpress
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
+      name: web
+  selector:
+    app: wordpress
+# ---
+# # phpMyAdmin Deployment
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: phpmyadmin
+#   namespace: training
+#   labels:
+#     app: phpmyadmin
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: phpmyadmin
+#   template:
+#     metadata:
+#       labels:
+#         app: phpmyadmin
+#     spec:
+#       containers:
+#         - name: phpmyadmin
+#           image: phpmyadmin:5.2
+#           ports:
+#             - containerPort: 80
+#               name: web
+#           env:
+#             - name: PMA_HOST
+#               value: mariadb
+#             - name: PMA_PORT
+#               value: "3306"
+#             - name: PMA_USER
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: mariadb-config
+#                   key: mysql-user
+#             - name: PMA_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: mariadb-secret
+#                   key: mysql-password
+#             - name: MYSQL_ROOT_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: mariadb-secret
+#                   key: mysql-root-password
+# ---
+# # phpMyAdmin Service
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: phpmyadmin
+#   namespace: training
+#   labels:
+#     app: phpmyadmin
+# spec:
+#   type: NodePort
+#   ports:
+#     - port: 80
+#       targetPort: 80
+#       nodePort: 30081
+#       name: web
+#   selector:
+#     app: phpmyadmin

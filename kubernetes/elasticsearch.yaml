@@ -4,6 +4,7 @@ metadata:
   name: elasticsearch
   labels:
     app: elasticsearch
+
 spec:
   replicas: 1
   selector:
@@ -18,22 +19,29 @@ spec:
         fsGroup: 1000
       volumes:
         - name: esdata
-          hostPath:
-            path: /data/esdata
-            type: DirectoryOrCreate
+          emptyDir: {}
       initContainers:
         - name: busybox
           image: busybox:1.28
-          command:
-            ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
           securityContext:
             runAsUser: 0
+            privileged: true
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /usr/share/elasticsearch/data
+              chown -R 1000:1000 /usr/share/elasticsearch/data
+              sysctl -w vm.max_map_count=262144
           volumeMounts:
             - name: esdata
               mountPath: "/usr/share/elasticsearch/data"
       containers:
         - name: elasticsearch
           image: elasticsearch:7.17.4
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
           ports:
             - name: es1
               containerPort: 9200
@@ -44,23 +52,16 @@ spec:
               value: "single-node"
             - name: ES_JAVA_OPTS
               value: "-Xms512m -Xmx1g"
-            - name: cluster.name
-              value: "elasticsearch"
-            - name: node.name
-              value: "elasticsearch-0"
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
           volumeMounts:
             - mountPath: "/usr/share/elasticsearch/data"
               name: esdata
           resources:
             requests:
-              memory: "1Gi"
+              memory: "512Mi"
               cpu: "500m"
             limits:
-              memory: "1Gi"
-              cpu: "1000m"
+              memory: "2Gi"
+              cpu: "1"
           readinessProbe:
             httpGet:
               path: /_cluster/health?wait_for_status=yellow
@@ -110,6 +111,21 @@ spec:
       labels:
         app: analytics
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      initContainers:
+        - name: wait-for-elasticsearch
+          image: curlimages/curl:7.85.0
+          command:
+            - sh
+            - -c
+            - |
+              until curl -s http://elasticsearch:9200/_cluster/health | grep -q '"status":"green\|yellow"'; do
+                echo "Waiting for Elasticsearch to be ready..."
+                sleep 10
+              done
+              echo "Elasticsearch is ready!"
       containers:
         - name: analytics
           image: kibana:7.17.4
@@ -122,7 +138,11 @@ spec:
             - name: SERVER_HOST
               value: "0.0.0.0"
             - name: ELASTICSEARCH_HOSTS
-              value: "http://elasticsearch.default.svc.cluster.local:9200"
+              value: "http://elasticsearch:9200"
+            - name: ELASTICSEARCH_REQUESTTIMEOUT
+              value: "132000"
+            - name: ELASTICSEARCH_SHARDTIMEOUT
+              value: "30000"
           readinessProbe:
             httpGet:
               path: /api/status
@@ -141,7 +161,7 @@ spec:
               cpu: "250m"
             limits:
               memory: "1Gi"
-              cpu: "1000m"
+              cpu: "1"
 
 ---
 apiVersion: v1
@@ -156,52 +176,4 @@ spec:
     - protocol: TCP
       port: 5601
       targetPort: 5601
-      nodePort: 30883
-
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: redirect-to-https
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
-
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: analytics-redirect
-spec:
-  entryPoints:
-    - web
-  routes:
-    - match: Host(`analytics.upskillforge.com`)
-      kind: Rule
-      middlewares:
-        - name: redirect-to-https
-      services:
-        - name: analytics-svc
-          port: 5601
-
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: analytics-https
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`analytics.upskillforge.com`)
-      kind: Rule
-      services:
-        - name: analytics-svc
-          port: 5601
-  tls:
-    certResolver: letsencrypt
-
-# Access Kibana at: https://analytics.upskillforge.com
-# HTTP requests will be automatically redirected to HTTPS
-# Or access directly via: http://195.179.227.12:30883 (NodePort still available as backup)
+      nodePort: 30601

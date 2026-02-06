@@ -1,0 +1,57 @@
+# Exemple d'utilisation de claimRef pour pré-lier un PV à un PVC spécifique
+# Le claimRef garantit que seul le PVC spécifié peut se lier à ce PV
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-with-claimref
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/claimref-data
+  # claimRef pré-lie ce PV au PVC spécifié
+  # Le PV restera en état "Available" mais réservé jusqu'à la création du PVC
+  claimRef:
+    namespace: default
+    name: pvc-reserved
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-reserved
+  namespace: default
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-using-claimref
+spec:
+  containers:
+  - name: app
+    image: nginx:latest
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+    volumeMounts:
+    - mountPath: /data
+      name: data-volume
+  volumes:
+  - name: data-volume
+    persistentVolumeClaim:
+      claimName: pvc-reserved

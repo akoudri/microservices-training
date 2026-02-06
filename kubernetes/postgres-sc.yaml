@@ -1,0 +1,93 @@
+# =============================================================================
+# EXERCICE : Provisionnement dynamique de volumes sur GKE
+# =============================================================================
+#
+# Objectif : Ajouter un stockage persistant à PostgreSQL avec provisionnement
+#            dynamique sur Google Cloud.
+#
+# Étape 1 : Créer une StorageClass
+# ---------------------------------
+# Ajoutez une StorageClass avant le Deployment avec :
+#   - name: gce-pd-standard
+#   - provisioner: pd.csi.storage.gke.io
+#   - reclaimPolicy: Retain
+#   - allowVolumeExpansion: true
+#   - volumeBindingMode: WaitForFirstConsumer
+#   - parameters.type: pd-standard
+#
+# Étape 2 : Créer un PersistentVolumeClaim
+# ----------------------------------------
+# Ajoutez un PVC qui utilise la StorageClass créée :
+#   - name: postgres-data
+#   - storageClassName: gce-pd-standard
+#   - accessModes: ReadWriteOnce
+#   - storage: 1Gi
+#
+# Étape 3 : Monter le volume dans le Deployment
+# ----------------------------------------------
+# Modifiez le Deployment pour :
+#   a) Ajouter un volumeMount dans le conteneur :
+#      - mountPath: /var/lib/postgresql/data
+#      - name: postgres-storage
+#   b) Ajouter un volume référençant le PVC :
+#      - name: postgres-storage
+#      - persistentVolumeClaim.claimName: postgres-data
+#
+# Étape 4 : Vérification
+# ----------------------
+# Après déploiement, vérifiez avec :
+#   kubectl get sc
+#   kubectl get pvc
+#   kubectl get pv
+#   kubectl describe pvc postgres-data
+#
+# =============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:alpine
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+          - name: POSTGRES_USER
+            value: "db"
+          - name: POSTGRES_PASSWORD
+            value: "db"
+          - name: POSTGRES_DB
+            value: "db"
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+  - port: 6543
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres

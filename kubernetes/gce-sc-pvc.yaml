@@ -1,0 +1,37 @@
+# Provisionnement dynamique sur GKE
+# Le PV et le disque GCE sont créés automatiquement par la StorageClass
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-gce-pvc
+spec:
+  storageClassName: standard  # standard-rwo, premium-rwo selon les besoins
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-dynamic-volume
+spec:
+  containers:
+  - name: app
+    image: nginx:latest
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
+    volumeMounts:
+    - mountPath: /data
+      name: dynamic-storage
+  volumes:
+  - name: dynamic-storage
+    persistentVolumeClaim:
+      claimName: dynamic-gce-pvc

@@ -1,8 +1,19 @@
-# Activer au préalable l'API Gateway
+# Activer au préalable l'API Gateway sur GKE:
+# gcloud container clusters update CLUSTER_NAME --gateway-api=standard --location=LOCATION
+#
+# Provisionner une adresse IP statique globale:
+# gcloud compute addresses create training-gateway-ip --global
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helloworld
+  namespace: training
 spec:
   selector:
     matchLabels:
@@ -14,16 +25,24 @@ spec:
         app: helloworld
     spec:
       containers:
-      - name: helloworld
-        image: karthequian/helloworld:black
-        ports:
-        - containerPort: 80
+        - name: helloworld
+          image: karthequian/helloworld:black
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: helloworld-service
+  namespace: training
 spec:
   type: ClusterIP
   ports:
@@ -38,18 +57,32 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: training-gateway
+  namespace: training
+  annotations:
+    networking.gke.io/certmap: "training-certmap"
 spec:
   gatewayClassName: gke-l7-global-external-managed
+  addresses:
+    - type: NamedAddress
+      value: training-gateway-ip
   listeners:
     - name: http
       protocol: HTTP
       port: 80
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        options:
+          networking.googleapis.com/cert-manager-certs: training-certmap
 
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: helloworld-route
+  namespace: training
 spec:
   parentRefs:
     - name: training-gateway

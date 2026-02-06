@@ -1,55 +1,264 @@
-# Création d'un cluster avec deux workers
+# =============================================================================
+# GUIDE: Création d'un cluster GKE avec Auto-Scaling et gestion des utilisateurs
+# =============================================================================
 
-gcloud compute machine-types list --filter="zone:(europe-west1-b)" # machines disponibles
+# =============================================================================
+# ÉTAPE 1: Installation de gcloud CLI
+# =============================================================================
 
-gcloud container clusters create test-cluster \
-  --zone=europe-west1-b \
-  --machine-type=e2-medium \
-  --num-nodes=3 \
-  --disk-size=30GB \
-  --preemptible \
-  --no-enable-shielded-nodes \
-  --no-enable-autoupgrade
-
-# Installation de gcloud
-
-## Dans le cas général
+# --- Linux/macOS ---
 curl https://sdk.cloud.google.com | bash
+exec -l $SHELL  # Redémarrer le shell pour appliquer les changements
+gcloud init     # Configuration initiale (projet, zone par défaut)
 
-## Sur powershell
+# --- Windows (PowerShell) ---
 (New-Object Net.WebClient).DownloadFile("https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe", "$env:Temp\GoogleCloudSDKInstaller.exe")
 & $env:Temp\GoogleCloudSDKInstaller.exe
 
-# Ajouter un utilisateur (ayant un compte google)
+# --- Installation du plugin d'authentification GKE (obligatoire) ---
 
-gcloud projects add-iam-policy-binding <PROJECT_ID> \
-  --member="user:adresse@email.com" \
+# Si gcloud installé via le script (curl):
+gcloud components install gke-gcloud-auth-plugin
+
+# Si gcloud installé via apt (Debian/Ubuntu):
+sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+
+# Activer le plugin
+echo 'export USE_GKE_GCLOUD_AUTH_PLUGIN=True' >> ~/.bashrc
+source ~/.bashrc
+
+# =============================================================================
+# ÉTAPE 2: Configuration du projet GCP
+# =============================================================================
+
+# Créer un nouveau projet (optionnel)
+gcloud projects create mon-projet-k8s --name="Mon Projet Kubernetes"
+
+# Sélectionner le projet
+gcloud config set project mon-projet-k8s
+
+# Activer l'API Kubernetes Engine (nécessaire avant de créer un cluster)
+gcloud services enable container.googleapis.com
+
+# Lier un compte de facturation (obligatoire pour GKE)
+gcloud billing accounts list
+gcloud billing projects link mon-projet-k8s --billing-account=XXXXXX-XXXXXX-XXXXXX
+
+# =============================================================================
+# ÉTAPE 3: Lister les ressources disponibles
+# =============================================================================
+
+# Voir les zones disponibles
+gcloud compute zones list --filter="region:(europe-west1)"
+
+# Voir les types de machines disponibles dans une zone
+gcloud compute machine-types list --filter="zone:(europe-west1-b)"
+
+# =============================================================================
+# ÉTAPE 4: Création du cluster avec Auto-Scaling
+# =============================================================================
+
+# Créer le réseau s'il n'existe pas déjà
+gcloud compute networks create default --subnet-mode=auto
+
+# Cluster avec node auto-scaling activé
+# - min-nodes: nombre minimum de nœuds (scale down)
+# - max-nodes: nombre maximum de nœuds (scale up)
+# - enable-autoscaling: active l'auto-scaling sur le node pool
+
+gcloud container clusters create mon-cluster \
+  --zone=europe-west1-b \
+  --machine-type=e2-medium \
+  --disk-size=30GB \
+  --num-nodes=2 \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=5 \
+  --enable-autorepair \
+  --enable-autoupgrade \
+  --release-channel=regular
+
+# Options expliquées:
+# --enable-autoscaling   : Active l'auto-scaling du cluster
+# --min-nodes=1          : Minimum 1 nœud (économie de coûts)
+# --max-nodes=5          : Maximum 5 nœuds (limite les coûts)
+# --enable-autorepair    : Répare automatiquement les nœuds défaillants
+# --enable-autoupgrade   : Met à jour automatiquement les nœuds
+# --release-channel      : Canal de mise à jour (rapid, regular, stable)
+
+# --- Alternative: Cluster avec nœuds préemptibles (moins cher, mais peut être interrompu) ---
+gcloud container clusters create mon-cluster-preemptible \
+  --zone=europe-west1-b \
+  --machine-type=e2-medium \
+  --disk-size=30GB \
+  --num-nodes=2 \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=5 \
+  --preemptible
+
+# =============================================================================
+# ÉTAPE 5: Récupérer les credentials pour kubectl
+# =============================================================================
+
+# Configure kubectl pour se connecter au cluster
+gcloud container clusters get-credentials mon-cluster --zone=europe-west1-b
+
+# Vérifier la connexion
+kubectl cluster-info
+kubectl get nodes
+
+# =============================================================================
+# ÉTAPE 6: Configurer l'auto-scaling des pods (HPA)
+# =============================================================================
+
+# En plus de l'auto-scaling des nœuds, configurer l'auto-scaling des pods
+# Exemple: scale les pods entre 2 et 10 réplicas selon l'utilisation CPU
+
+kubectl autoscale deployment mon-deployment --cpu-percent=70 --min=2 --max=10
+
+# Vérifier le HPA
+kubectl get hpa
+
+# =============================================================================
+# ÉTAPE 7: Ajouter des utilisateurs au cluster
+# =============================================================================
+
+# --- 7.1: Rôles IAM disponibles pour GKE ---
+# roles/container.admin        : Accès complet au cluster
+# roles/container.developer    : Déployer des applications (pas de gestion cluster)
+# roles/container.viewer       : Lecture seule
+# roles/container.clusterAdmin : Admin du cluster Kubernetes (RBAC)
+
+# --- 7.2: Ajouter un utilisateur avec un compte Google ---
+
+# Donner accès au projet GCP avec le rôle développeur
+gcloud projects add-iam-policy-binding mon-projet-k8s \
+  --member="user:alice@gmail.com" \
   --role="roles/container.developer"
 
-gcloud init # choisir le projet GCP et la zone par défaut
-gcloud components install gke-gcloud-auth-plugin # la personne doit installer le plugin d'authentification
-gcloud auth login # la personne ajoutée doit s'authentifier
-gcloud container clusters get-credentials test-cluster --zone europe-west1-b
+# Donner accès admin au cluster
+gcloud projects add-iam-policy-binding mon-projet-k8s \
+  --member="user:bob@gmail.com" \
+  --role="roles/container.admin"
 
-# Activer une règle de firewall
+# --- 7.3: Ce que l'utilisateur ajouté doit faire ---
 
-gcloud compute firewall-rules create allow-nodeport-<port> \
-  --allow tcp:<port>  \
+# 1. Installer gcloud CLI (voir ÉTAPE 1)
+
+# 2. Installer le plugin d'authentification
+gcloud components install gke-gcloud-auth-plugin
+
+# 3. S'authentifier avec son compte Google
+gcloud auth login
+
+# 4. Sélectionner le projet
+gcloud config set project mon-projet-k8s
+
+# 5. Récupérer les credentials du cluster
+gcloud container clusters get-credentials mon-cluster --zone=europe-west1-b
+
+# 6. Vérifier l'accès
+kubectl get pods
+
+# --- 7.4: Ajouter un compte de service (pour CI/CD) ---
+
+# Créer un compte de service
+gcloud iam service-accounts create ci-cd-deployer \
+  --display-name="CI/CD Deployer"
+
+# Donner les droits de déploiement
+gcloud projects add-iam-policy-binding mon-projet-k8s \
+  --member="serviceAccount:ci-cd-deployer@mon-projet-k8s.iam.gserviceaccount.com" \
+  --role="roles/container.developer"
+
+# Générer une clé JSON pour le compte de service
+gcloud iam service-accounts keys create ~/ci-cd-key.json \
+  --iam-account=ci-cd-deployer@mon-projet-k8s.iam.gserviceaccount.com
+
+# =============================================================================
+# ÉTAPE 8: Configuration du réseau (Firewall)
+# =============================================================================
+
+# Autoriser l'accès à un NodePort spécifique
+gcloud compute firewall-rules create allow-nodeport-30080 \
+  --allow=tcp:30080 \
   --direction=INGRESS \
   --priority=1000 \
   --network=default \
   --source-ranges=0.0.0.0/0 \
-  --description="Autorise l'accès au NodePort <port> sur tous les nœuds du cluster"
+  --description="Autorise l'accès au NodePort 30080"
 
-# Création d'un volume
-gcloud compute disks create gke-pv --zone=europe-west1-b --size=10GB --type=pd-standard
+# Autoriser HTTP/HTTPS
+gcloud compute firewall-rules create allow-http-https \
+  --allow=tcp:80,tcp:443 \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=http-server,https-server
 
-# Activation de l'API Gateway
-# Peut prendre 1 heure
+# =============================================================================
+# ÉTAPE 9: Création de volumes persistants
+# =============================================================================
 
-gcloud container clusters update test-cluster \
+# Créer un disque persistant
+gcloud compute disks create gke-pv-disk \
+  --zone=europe-west1-b \
+  --size=10GB \
+  --type=pd-standard
+
+# Types disponibles: pd-standard (HDD), pd-ssd (SSD), pd-balanced
+
+# =============================================================================
+# ÉTAPE 10: Activer l'API Gateway (optionnel)
+# =============================================================================
+
+# Note: L'activation peut prendre jusqu'à 1 heure
+gcloud container clusters update mon-cluster \
   --location=europe-west1-b \
   --gateway-api=standard
 
-kubectl get crds | grep gateway # Vérification
-kubectl get gatewayclass # Vérification
+# Vérification
+kubectl get crds | grep gateway
+kubectl get gatewayclass
+
+# =============================================================================
+# COMMANDES UTILES
+# =============================================================================
+
+# Voir l'état de l'auto-scaling
+kubectl describe nodes | grep -A5 "Allocatable"
+gcloud container clusters describe mon-cluster --zone=europe-west1-b | grep -A10 "autoscaling"
+
+# Lister les utilisateurs ayant accès au projet
+gcloud projects get-iam-policy mon-projet-k8s
+
+# Retirer l'accès à un utilisateur
+gcloud projects remove-iam-policy-binding mon-projet-k8s \
+  --member="user:alice@gmail.com" \
+  --role="roles/container.developer"
+
+# Redimensionner manuellement le cluster (override l'auto-scaling temporairement)
+gcloud container clusters resize mon-cluster --node-pool=default-pool --num-nodes=3 --zone=europe-west1-b
+
+# =============================================================================
+# NETTOYAGE (suppression des ressources)
+# =============================================================================
+
+# Supprimer le cluster
+gcloud container clusters delete mon-cluster --zone=europe-west1-b
+
+# Supprimer les disques
+gcloud compute disks delete gke-pv-disk --zone=europe-west1-b
+
+# Supprimer les règles de firewall
+gcloud compute firewall-rules delete allow-nodeport-30080
+gcloud compute firewall-rules delete allow-http-https
+
+# Supprimer les adresses IP statiques
+gcloud compute addresses list
+gcloud compute addresses delete <IP_NAME> --region=europe-west1
+
+# OU simplement supprimer le projet entier
+gcloud projects delete mon-projet-k8s

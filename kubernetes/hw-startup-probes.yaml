@@ -1,0 +1,121 @@
+##############################################################################
+# Exemple : Startup Probe
+#
+# La startupProbe est utilisée pour les conteneurs lents à démarrer.
+# Tant qu'elle n'a pas réussi, les liveness/readiness probes sont désactivées.
+# Cela évite qu'un conteneur soit tué avant d'avoir fini son initialisation.
+#
+# Usage:
+#   kubectl apply -f kubernetes/hw-startup-probes.yaml
+#   kubectl get pods -n training -w
+#   kubectl describe pod -n training -l app=slow-start
+#
+# Nettoyage:
+#   kubectl delete -f kubernetes/hw-startup-probes.yaml
+##############################################################################
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: training
+
+---
+
+# Deployment avec startupProbe — simule une app lente à démarrer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slow-start-app
+  namespace: training
+spec:
+  selector:
+    matchLabels:
+      app: slow-start
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: slow-start
+    spec:
+      containers:
+        - name: slow-start
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          # La startupProbe donne au conteneur le temps de démarrer
+          # failureThreshold * periodSeconds = 30 * 10 = 300s (5 min) max
+          # Les liveness/readiness ne commencent qu'après son succès
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            failureThreshold: 30
+            periodSeconds: 10
+          # Vérifie que le conteneur est toujours vivant (après startup)
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+            failureThreshold: 3
+          # Vérifie que le conteneur est prêt à recevoir du trafic
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+            failureThreshold: 1
+
+---
+
+# Deployment SANS startupProbe — pour comparer le comportement
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-start-app
+  namespace: training
+spec:
+  selector:
+    matchLabels:
+      app: fast-start
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fast-start
+    spec:
+      containers:
+        - name: fast-start
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          # Sans startupProbe, liveness démarre immédiatement
+          # initialDelaySeconds compense mais est moins flexible
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 1

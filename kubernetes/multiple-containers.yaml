@@ -9,12 +9,26 @@ spec:
     volumeMounts:
     - name: shared-logs
       mountPath: /var/log/nginx
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
   - name: log-watcher-sidecar
     image: busybox
     args: [/bin/sh, -c, 'tail -n+1 -f /var/log/nginx/access.log']
     volumeMounts:
     - name: shared-logs
       mountPath: /var/log/nginx
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        cpu: 50m
+        memory: 64Mi
   volumes:
   - name: shared-logs
     emptyDir: {}

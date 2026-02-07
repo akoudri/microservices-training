@@ -19,6 +19,13 @@ spec:
       image: busybox
       command: ["sh", "-c"]
       args: ["echo $GREETING && echo $FAREWELL"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
       envFrom:
         - configMapRef:
             name: demo-config
@@ -36,6 +43,13 @@ spec:
       image: busybox
       command: ["sh", "-c"]
       args: ["echo $GREETING"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
       env:
         - name: GREETING
           valueFrom:
@@ -56,6 +70,13 @@ spec:
       image: busybox
       command: ["sh", "-c"]
       args: ["cat /etc/config/CONFIG_FILE"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
       volumeMounts:
         - name: config-volume
           mountPath: /etc/config

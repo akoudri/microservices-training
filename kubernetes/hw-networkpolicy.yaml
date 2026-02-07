@@ -1,0 +1,215 @@
+##############################################################################
+# Exemple : NetworkPolicy (Ingress & Egress)
+#
+# Architecture de la demo :
+#   [client] --80--> [frontend] --80--> [backend]
+#
+# Policies appliquees :
+#   1. default-deny : bloque tout le trafic dans le namespace
+#   2. frontend-policy : autorise l'ingress depuis n'importe ou sur le port 80
+#                        autorise l'egress uniquement vers le backend sur le port 80
+#                        autorise l'egress DNS (port 53) pour la resolution de noms
+#   3. backend-policy : autorise l'ingress uniquement depuis le frontend sur le port 80
+#                       bloque tout egress
+#
+# Prerequis :
+#   Un CNI supportant les NetworkPolicies (Calico, Cilium, Weave...).
+#   Sur GKE, activer --enable-network-policy ou utiliser GKE Dataplane V2.
+#
+# Usage :
+#   kubectl apply -f kubernetes/hw-networkpolicy.yaml
+#
+# Test :
+#   # Depuis le frontend, le backend repond :
+#   kubectl exec -n netpol-demo deploy/frontend -- wget -qO- http://backend
+#
+#   # Depuis un pod sans label, le frontend repond :
+#   kubectl run -n netpol-demo test --rm -it --image=busybox --restart=Never \
+#     -- wget -qO- --timeout=3 http://frontend
+#
+#   # Depuis un pod sans label, le backend est bloque (timeout) :
+#   kubectl run -n netpol-demo test --rm -it --image=busybox --restart=Never \
+#     -- wget -qO- --timeout=3 http://backend
+#
+# Nettoyage :
+#   kubectl delete ns netpol-demo
+##############################################################################
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: netpol-demo
+
+---
+
+# --- Backend : nginx servant de "API" ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: netpol-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        role: api
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: netpol-demo
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+
+# --- Frontend : nginx servant de "Web" ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: netpol-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        role: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: netpol-demo
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+
+##############################################################################
+# Policy 1 : Default Deny — bloque tout le trafic ingress et egress
+##############################################################################
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: netpol-demo
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+
+##############################################################################
+# Policy 2 : Frontend
+#   Ingress : autorise tout le monde sur le port 80
+#   Egress  : uniquement vers le backend (port 80) + DNS (port 53)
+##############################################################################
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: netpol-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    # Vers le backend
+    - to:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 80
+    # DNS (kube-dns)
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+
+##############################################################################
+# Policy 3 : Backend
+#   Ingress : uniquement depuis les pods avec label app=frontend, port 80
+#   Egress  : aucun (pas de regle = tout bloque grace au default-deny)
+##############################################################################
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: netpol-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 80

@@ -1,0 +1,63 @@
+##############################################################################
+# Exemple : Deployment + Service LoadBalancer avec IP statique GKE
+#
+# 1. Provisionner une adresse IP statique :
+#    gcloud compute addresses create helloworld-ip --region=<REGION>
+#
+# 2. Récupérer l'adresse IP :
+#    gcloud compute addresses describe helloworld-ip --region=<REGION> --format='value(address)'
+#
+# 3. Remplacer <STATIC_IP> ci-dessous par l'adresse obtenue
+#
+# 4. Déployer :
+#    kubectl apply -f kubernetes/hw-lb.yaml
+#
+# 5. Vérifier :
+#    kubectl get svc helloworld-lb
+#
+# 6. Nettoyer :
+#    kubectl delete -f kubernetes/hw-lb.yaml
+#    gcloud compute addresses delete helloworld-ip --region=<REGION>
+##############################################################################
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld
+spec:
+  selector:
+    matchLabels:
+      app: helloworld
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: helloworld
+        image: karthequian/helloworld:black
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld-lb
+spec:
+  type: LoadBalancer
+  loadBalancerIP: <STATIC_IP>
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: helloworld

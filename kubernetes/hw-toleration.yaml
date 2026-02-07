@@ -1,0 +1,62 @@
+##############################################################################
+# Exemple : Taint & Toleration
+#
+# 1. Tainter un node :
+#    ./scripts/taint-node.sh <node-name>                  # dedicated=special:NoSchedule
+#    ./scripts/taint-node.sh <node-name> env production    # env=production:NoSchedule
+#
+# 2. Déployer ce manifest :
+#    kubectl apply -f kubernetes/hw-toleration.yaml
+#
+# 3. Vérifier le placement :
+#    kubectl get pods -o wide
+#
+# 4. Nettoyer :
+#    kubectl delete -f kubernetes/hw-toleration.yaml
+#    kubectl taint nodes <node-name> dedicated-
+##############################################################################
+
+# Pod SANS toleration — ne sera PAS schedulé sur un node tainté
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-without-toleration
+  labels:
+    example: toleration
+spec:
+  containers:
+    - name: nginx
+      image: nginx:alpine
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+
+---
+
+# Pod AVEC toleration — sera schedulé même sur un node tainté (dedicated=special:NoSchedule)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-toleration
+  labels:
+    example: toleration
+spec:
+  containers:
+    - name: nginx
+      image: nginx:alpine
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+  tolerations:
+    - key: "dedicated"
+      operator: "Equal"
+      value: "special"
+      effect: "NoSchedule"

@@ -8,6 +8,13 @@ spec:
       image: busybox
       command: ["sh", "-c"]
       args: ["echo $GREETING"]
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
       env:
         - name: GREETING
           value: "Hello, Kubernetes with Environment Variable!"

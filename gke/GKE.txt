@@ -189,6 +189,15 @@ gcloud compute firewall-rules create allow-nodeport-30080 \
   --source-ranges=0.0.0.0/0 \
   --description="Autorise l'accès au NodePort 30080"
 
+# Autoriser l'accès à tous les ports NodePort (30000-32767)
+gcloud compute firewall-rules create allow-nodeport-range \
+  --allow=tcp:30000-32767 \
+  --direction=INGRESS \
+  --priority=1000 \
+  --network=default \
+  --source-ranges=0.0.0.0/0 \
+  --description="Autorise l'accès à tous les ports NodePort (30000-32767)"
+
 # Autoriser HTTP/HTTPS
 gcloud compute firewall-rules create allow-http-https \
   --allow=tcp:80,tcp:443 \

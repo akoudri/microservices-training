@@ -16,15 +16,15 @@ metadata:
     release-version: "12.0"
 spec:
   containers:
-  - name: helloworld
-    image: karthequian/helloworld:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: helloworld
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -39,15 +39,15 @@ metadata:
     release-version: "12.0"
 spec:
   containers:
-  - name: helloworld
-    image: karthequian/helloworld:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: helloworld
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -62,15 +62,15 @@ metadata:
     release-version: "12.0"
 spec:
   containers:
-  - name: helloworld
-    image: karthequian/helloworld:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: helloworld
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -85,15 +85,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: login
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: login
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -108,15 +108,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: login
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: login
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -131,15 +131,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: login
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: login
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -154,15 +154,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: cart
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: cart
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -177,15 +177,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: cart
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: cart
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -200,17 +200,16 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: cart
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: cart
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
-
 apiVersion: v1
 kind: Pod
 metadata:
@@ -224,15 +223,15 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: social
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: social
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -247,15 +246,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: social
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: social
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -270,15 +269,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: social
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: social
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -293,15 +292,15 @@ metadata:
     release-version: "4.0"
 spec:
   containers:
-  - name: catalog
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: catalog
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -316,15 +315,15 @@ metadata:
     release-version: "4.0"
 spec:
   containers:
-  - name: catalog
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: catalog
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -339,15 +338,15 @@ metadata:
     release-version: "4.0"
 spec:
   containers:
-  - name: catalog
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: catalog
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -362,15 +361,15 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: quote
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: quote
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -385,15 +384,15 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: quote
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: quote
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -408,15 +407,15 @@ metadata:
     release-version: "1.0"
 spec:
   containers:
-  - name: quote
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: quote
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -431,15 +430,15 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: ordering
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: ordering
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -454,15 +453,15 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: ordering
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: ordering
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---
 apiVersion: v1
 kind: Pod
@@ -477,13 +476,13 @@ metadata:
     release-version: "2.0"
 spec:
   containers:
-  - name: ordering
-    image: karthequian/ruby:latest
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 100m
-        memory: 128Mi
+    - name: ordering
+      image: karthequian/helloworld:latest
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
 ---

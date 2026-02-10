@@ -35,29 +35,28 @@ spec:
         app: helloworld
     spec:
       containers:
-      - name: helloworld
-        image: karthequian/helloworld:black
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
+        - name: helloworld
+          image: karthequian/helloworld:black
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   name: helloworld-lb
 spec:
   type: LoadBalancer
-  loadBalancerIP: <STATIC_IP>
+  loadBalancerIP: 130.211.70.70
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
   selector:
     app: helloworld

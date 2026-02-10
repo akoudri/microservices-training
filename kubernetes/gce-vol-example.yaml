@@ -6,22 +6,22 @@ metadata:
   name: test-gce-pd
 spec:
   containers:
-  - image: registry.k8s.io/test-webserver
-    name: test-container
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "100m"
-      limits:
-        memory: "128Mi"
-        cpu: "200m"
-    volumeMounts:
-    - mountPath: /test-gce
-      name: test-volume
-      readOnly: false
+    - image: karthequian/helloworld:black
+      name: test-container
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "100m"
+        limits:
+          memory: "128Mi"
+          cpu: "200m"
+      volumeMounts:
+        - mountPath: /test-gce
+          name: test-volume
+          readOnly: false
   volumes:
-  - name: test-volume
-    # Ce volume GCE Persistent Disk doit déjà exister.
-    gcePersistentDisk:
-      pdName: my-data-disk
-      fsType: ext4
+    - name: test-volume
+      # Ce volume GCE Persistent Disk doit déjà exister.
+      gcePersistentDisk:
+        pdName: my-data-disk
+        fsType: ext4

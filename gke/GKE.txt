@@ -97,6 +97,12 @@ gcloud container clusters create mon-cluster-preemptible \
   --max-nodes=5 \
   --preemptible
 
+# Activer la vérification des images
+gcloud container clusters update mon-cluster \
+	--binauthz-evaluation-mode=PROJECT_SINGLETON_POLICY_ENFORCE \
+	--zone=europe-west1-b
+
+
 # =============================================================================
 # ÉTAPE 5: Récupérer les credentials pour kubectl
 # =============================================================================
